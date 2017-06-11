@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>主页</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" type="text/css" href="./css/huhx-1.0.1.css">
+	<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+</head>
+<body>
+<div class="huhx-container huhx-v-scrollbar">
+	<div class="huhx-full-screen">
+		<video class="huhx-video" autoplay="autoplay" loop="loop" poster="http://7xresw.com1.z0.glb.clouddn.com/o_1ag7ctt647fa1jupeqc1t6c41nr.png" onloadeddata="refreshBar()">
+			<source src="http://7xresw.com1.z0.glb.clouddn.com/o_1af8qps441sj1fq61h891v13vtam.mp4" type="video/mp4">
+		</video>
+	</div>
+	<div class="huhx-vertical-scrollbar huhx-hide">
+		<div class="huhx-scrollbar"></div>
+	</div>
+</div>
+
+<script type="text/javascript">
+  $(document).ready(function(){
+  	refreshBar();
+
+  	var counter = 1;
+  	var isShowBar = true;
+  	window.setInterval(showBar, 1000);
+  	//监听鼠标
+    document.onmousemove = function () {
+	    counter = 1;
+    	if (!isShowBar) {
+    		isShowBar = true;
+    		$(".huhx-scrollbar").css("opacity", 0.2);
+    	}
+    }
+    //监听键盘
+    document.onkeydown = function () {
+        
+    };
+
+    function showBar(){
+    	counter++;
+    	if (counter > 3) {
+    		counter = 1;
+    		if (isShowBar) {
+	    		isShowBar = false;
+	    		$(".huhx-scrollbar").css("opacity", 0);
+    		}
+    	}
+    }
+
+    var $huhx_f_s = $(".huhx-full-screen");
+    $(".huhx-scrollbar").on('mousedown', function(event){
+    	var $bar = $(this);
+    	var y = event.clientY;
+	  	var client_h = $(window).height(); //窗口高度
+	  	var content_h = $(".huhx-full-screen").outerHeight(true); //内容高度，包括padding和margin
+	  	var bar_h = $bar.height();
+    	var bar_top = parseFloat($bar.css("top"));
+    	var maxTopMove = client_h - bar_h;
+    	var driftRate;
+    	var moveY;
+    	$(document).on('mousemove', function(e){
+    		moveY = e.clientY - y;
+    		y = e.clientY;
+    		bar_top = moveY < 0 ? (-moveY > bar_top ? 0 : bar_top + moveY) : (moveY > maxTopMove - bar_top ? maxTopMove : moveY + bar_top);
+    		$bar.css("top", bar_top);
+    		driftRate = bar_top / maxTopMove;
+    		$huhx_f_s.css("top", (client_h - content_h ) * driftRate);
+    	});
+    	$(document).one('mouseup', function(e){
+    		$(document).off('mousemove');
+    	});
+    });
+  });
+
+  $(window).resize(function(){
+    refreshBar();
+  });
+
+
+
+  function refreshBar() {
+  	var client_h = $(window).height(); //窗口高度
+  	var content_h = $(".huhx-full-screen").outerHeight(true); //内容高度，包括padding和margin
+  	if (content_h <= client_h || client_h < 50) {
+      $(".huhx-vertical-scrollbar").addClass("huhx-hide");
+      //清除事件
+      if(document.addEventListener){
+        document.removeEventListener('DOMMouseScroll',slideSrcoll,false); //兼容火狐
+        document.removeEventListener('mousewheel',slideSrcoll,false);
+      } else if (document.attachEvent) {
+      	document.detachEvent('onmousewheel', slideSrcoll); //兼容IE
+      }
+    } else {
+  	  var bar_h = client_h * client_h / content_h;
+  	  $(".huhx-vertical-scrollbar").removeClass("huhx-hide").children(".huhx-scrollbar").css("height", bar_h);
+      //添加事件
+      if(document.addEventListener){
+        document.addEventListener('DOMMouseScroll',slideSrcoll,false); //兼容火狐
+        document.addEventListener('mousewheel',slideSrcoll,false);
+      } else if (document.attachEvent) {
+      	document.attachEvent('onmousewheel', slideSrcoll); //兼容IE
+      }
+    }
+  }
+
+	function slideSrcoll(event){
+		var dist = 20; //每次滑轮滚动移动的距离
+	  	var client_h = $(window).height(); //窗口高度
+	  	var content_h = $(".huhx-full-screen").outerHeight(true); //内容高度，包括padding和margin
+	  	var bar_h = $(".huhx-scrollbar").height();
+	  	var content_top = parseFloat($(".huhx-full-screen").css("top"));
+	  	var maxTopMove = content_h - client_h;
+	  	/** 事件处理 **/
+	  	var e = event || window.event;
+		e.preventDefault ? e.preventDefault() : e.returnvalue = false; //取消事件的默认动作（此处是取消滑轮滚动 改变滚动条的动作）
+		e.wheelDelta = e.wheelDelta ? e.wheelDelta : (e.detail * (-40));
+		if (e.wheelDelta > 0) { //向上
+			content_top = content_top + dist;
+			content_top = content_top > 0 ? 0 : content_top; //计算出本次偏移的位置
+		} else { //向下
+			content_top = content_top - dist;
+			content_top = content_top > -maxTopMove ? content_top : -maxTopMove; //计算出本次偏移的位置
+		}
+
+		//修改内容的位置
+		$(".huhx-full-screen").css("top", content_top);
+		var driftRate = -content_top / maxTopMove; //计算聊天内容滑动的比例（已滑动 / 可滑动）
+		var bar_top = (client_h - bar_h) * driftRate; //计算出滚动条的位置
+		//修改滚动条的位置
+		$(".huhx-scrollbar").css("top", bar_top);
+	}
+</script>
+
+</body>
+</html>
